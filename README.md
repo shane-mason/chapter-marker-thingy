@@ -64,7 +64,7 @@ Shows a nice table with:
 - Type (black frame or scene change)
 - Confidence level
 - Whether silence was detected nearby
-
+```
                          Commercial Break Points
 ┏━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━┓
 ┃ # ┃ Timestamp ┃ Time (seconds) ┃     Type     ┃ Confidence ┃ Silence? ┃
@@ -78,7 +78,7 @@ Shows a nice table with:
 │ 7 │  140:20   │       8420.90s │ Black Frame  │    HIGH    │          │
 └───┴───────────┴────────────────┴──────────────┴────────────┴──────────┘
 
-
+```
 If you use `--write-chapters`:
 - Creates chapter markers in FFMETADATA format and adds them to the video file
 - By default, creates a new file with `.chapters` added to the name (e.g., `video.chapters.mp4`)
