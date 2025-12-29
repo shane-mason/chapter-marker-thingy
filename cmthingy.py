@@ -5,8 +5,8 @@ import argparse
 from rich.console import Console
 from rich.table import Table
 
-#FFMPEG = "/usr/bin/ffmpeg"
-FFMPEG = "C:/Users/shane/bin/ffmpeg/bin/ffmpeg.exe"
+FFMPEG = "/usr/bin/ffmpeg"
+#FFMPEG = "C:/Users/whatever/bin/ffmpeg/bin/ffmpeg.exe"
 
 console = Console()
 
