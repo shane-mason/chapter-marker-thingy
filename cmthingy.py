@@ -37,6 +37,27 @@ def get_video_duration(video_file):
     return None
 
 
+def has_chapters(video_file):
+    """Return True if the file already contains chapter markers, False if not, None on error."""
+    if not os.path.isfile(FFMPEG):
+        console.print(f"[red]Error: ffmpeg not found at {FFMPEG}[/red]")
+        return None
+
+    if not os.path.isfile(video_file):
+        console.print(f"[red]Error: Video file not found: {video_file}[/red]")
+        return None
+
+    command = f'{FFMPEG} -i "{video_file}"'
+    process = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    _, error = process.communicate()
+
+    # ffmpeg dumps existing chapters as "Chapter #0:0: start ..." lines
+    for line in error.decode(errors="replace").splitlines():
+        if re.search(r'^\s*Chapter #', line):
+            return True
+    return False
+
+
 def get_files(directory, extensions):
     file_list = []
     for root, dirs, files in os.walk(directory):
@@ -423,10 +444,19 @@ def detect_scenes(video_file):
 
     return scenes
 
-def process_video_file(video_file, max_gap_minutes=12, max_breaks_per_hour=None, write_chapters=False, overwrite=False):
+def process_video_file(video_file, max_gap_minutes=12, max_breaks_per_hour=None, write_chapters=False, overwrite=False, skip_existing=False):
     #run through each operation
     console.print(f"\n[bold magenta]Processing:[/bold magenta] {os.path.basename(video_file)}")
     console.print(f"[dim]{video_file}[/dim]")
+
+    if skip_existing:
+        existing = has_chapters(video_file)
+        if existing is None:
+            console.print("[red]Error: Could not check for existing chapters[/red]")
+            return None
+        if existing:
+            console.print("[yellow]Skipping: file already has chapter markers[/yellow]")
+            return None
 
     duration = get_video_duration(video_file)
     if duration is None:
@@ -472,6 +502,18 @@ def process_video_file(video_file, max_gap_minutes=12, max_breaks_per_hour=None,
     return optimal_breaks
 
 
+def check_chapters_report(video_file):
+    """Print whether a file has chapter markers. Returns True/False/None (error)."""
+    result = has_chapters(video_file)
+    if result is None:
+        return None
+    if result:
+        console.print(f"[green]✓ Has chapters:[/green] {video_file}")
+    else:
+        console.print(f"[yellow]✗ No chapters:[/yellow] {video_file}")
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Detect commercial break points in video files',
@@ -484,6 +526,8 @@ Examples:
   python cmthingy.py -f video.mp4 --write-chapters
   python cmthingy.py -f video.mp4 --write-chapters --overwrite
   python cmthingy.py -d /path/to/videos --write-chapters --overwrite
+  python cmthingy.py -d /path/to/videos --check-chapters
+  python cmthingy.py -d /path/to/videos --write-chapters --overwrite --skip-existing
         """
     )
 
@@ -499,6 +543,10 @@ Examples:
                        help='Write chapter markers to video file')
     parser.add_argument('--overwrite', action='store_true',
                        help='Overwrite original file instead of creating .chapters file')
+    parser.add_argument('--check-chapters', action='store_true',
+                       help='Only report whether each file already has chapter markers (no analysis)')
+    parser.add_argument('--skip-existing', action='store_true',
+                       help='Skip files that already have chapter markers')
 
     args = parser.parse_args()
 
@@ -506,7 +554,10 @@ Examples:
         if not os.path.isfile(args.file):
             console.print(f"[red]Error: File not found: {args.file}[/red]")
             return 1
-        process_video_file(args.file, max_gap_minutes=args.max_gap, max_breaks_per_hour=args.max_breaks_per_hour, write_chapters=args.write_chapters, overwrite=args.overwrite)
+        if args.check_chapters:
+            result = check_chapters_report(args.file)
+            return 0 if result else 1
+        process_video_file(args.file, max_gap_minutes=args.max_gap, max_breaks_per_hour=args.max_breaks_per_hour, write_chapters=args.write_chapters, overwrite=args.overwrite, skip_existing=args.skip_existing)
 
     elif args.dir:
         if not os.path.isdir(args.dir):
@@ -518,10 +569,19 @@ Examples:
             console.print(f"[yellow]No video files found in {args.dir}[/yellow]")
             return 0
 
+        if args.check_chapters:
+            console.print(f"[bold cyan]Checking {len(video_files)} video file(s) for chapter markers[/bold cyan]")
+            with_chapters = 0
+            for video_file in video_files:
+                if check_chapters_report(video_file):
+                    with_chapters += 1
+            console.print(f"\n[bold]{with_chapters}/{len(video_files)} file(s) already have chapters[/bold]")
+            return 0
+
         console.print(f"[bold cyan]Found {len(video_files)} video file(s)[/bold cyan]")
         for i, video_file in enumerate(video_files, 1):
             console.print(f"\n[bold]═══ File {i}/{len(video_files)} ═══[/bold]")
-            process_video_file(video_file, max_gap_minutes=args.max_gap, max_breaks_per_hour=args.max_breaks_per_hour, write_chapters=args.write_chapters, overwrite=args.overwrite)
+            process_video_file(video_file, max_gap_minutes=args.max_gap, max_breaks_per_hour=args.max_breaks_per_hour, write_chapters=args.write_chapters, overwrite=args.overwrite, skip_existing=args.skip_existing)
 
     return 0
 
