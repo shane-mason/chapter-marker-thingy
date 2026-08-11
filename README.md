@@ -41,6 +41,11 @@ Write chapter markers to the videos:
 python cmthingy.py -f video.mp4 --write-chapters
 ```
 
+Write chapter markers to the videos, skipping any videos with existing chapter markers:
+```bash
+python cmthingy.py -f video.mp4 --write-chapters --skip-existing
+```
+
 Overwrite the original files instead of creating `.chapters` files:
 ```bash
 python cmthingy.py -f video.mp4 --write-chapters --overwrite
