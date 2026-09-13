@@ -195,7 +195,7 @@ def write_chapters_to_video(video_file, break_points, video_duration, output_fil
                 f.write(f"title=Chapter {chapter_num}\n")
 
         console.print(f"[bold yellow]Writing chapters to video file...[/bold yellow]")
-        command = f'{FFMPEG} -i "{video_file}" -i "{metadata_file}" -map_metadata 1 -map_chapters 1 -codec copy -y "{output_file}"'
+        command = f'{FFMPEG} -i "{video_file}" -i "{metadata_file}" -map 0 -map_metadata 1 -map_chapters 1 -codec copy -y "{output_file}"'
 
         process = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         _, error = process.communicate()

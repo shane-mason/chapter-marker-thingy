@@ -49,6 +49,7 @@ def reapply_metadata(video_file, metadata_text, output_file):
         FFMPEG,
         "-i", video_file,
         "-i", metadata_path,
+        "-map", "0",
         "-map_metadata", "1",
         "-map_chapters", "1",
         "-c", "copy",
