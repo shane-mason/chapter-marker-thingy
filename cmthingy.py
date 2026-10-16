@@ -536,9 +536,9 @@ Examples:
     group.add_argument('-d', '--dir', type=str, help='Process all video files in directory (recursive)')
 
     parser.add_argument('--max-gap', type=int, default=12,
-                       help='Maximum gap in minutes before inserting scene-based break (default: 12)')
+                       help='Gaps longer than this many minutes get a scene-change break, but only if a scene change with nearby silence exists in the gap. Not a hard limit (default: 12)')
     parser.add_argument('--max-breaks-per-hour', type=float, default=None,
-                       help='Maximum number of breaks per hour of video (e.g., 5). When specified, selects the best breaks while maintaining distribution.')
+                       help='Maximum number of breaks per hour of video (e.g., 5). Keeps the highest-scoring breaks (at least 2 min apart) and drops the rest, which can leave gaps longer than --max-gap.')
     parser.add_argument('--write-chapters', action='store_true',
                        help='Write chapter markers to video file')
     parser.add_argument('--overwrite', action='store_true',

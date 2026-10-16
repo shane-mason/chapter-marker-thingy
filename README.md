@@ -51,7 +51,7 @@ Overwrite the original files instead of creating `.chapters` files:
 python cmthingy.py -f video.mp4 --write-chapters --overwrite
 ```
 
-Adjust the maximum gap before it inserts a scene-based break (default is 12 minutes):
+Adjust the maximum gap before it *tries* to insert a scene-based break (default is 12 minutes). Only a scene change with silence nearby gets used, so a gap with no silent spot stays as-is:
 ```bash
 python cmthingy.py -f video.mp4 --max-gap 15
 ```
@@ -69,14 +69,14 @@ The script runs ffmpeg to detect:
 - **Scene changes**: Used to fill large gaps when there aren't enough black frames
 
 It scores each potential break point based on:
-- Distance from ideal position (8 minute intervals)
+- Distance from the middle of the gap being filled
 - Presence of black frames (+10 points)
 - Presence and duration of silence (+5-9 points)
 - Scene changes (baseline)
 
-Only scene changes with a score of 3+ are used (ensures silence is nearby).
+Only scene changes with a score of 3+ are used, which in practice means one has to have silence nearby. If a video has no silence (e.g. music or effects run continuously over transitions), gaps won't be filled regardless of `--max-gap`.
 
-When `--max-breaks-per-hour` is specified, it limits the total breaks based on video duration (e.g., a 45-minute video with `--max-breaks-per-hour 5` allows up to 4 breaks). It picks the highest-scoring breaks while keeping them at least 2 minutes apart to avoid clustering.
+When `--max-breaks-per-hour` is specified, it limits the total breaks based on video duration (e.g., a 45-minute video with `--max-breaks-per-hour 5` allows up to 4 breaks). It picks the highest-scoring breaks while keeping them at least 2 minutes apart to avoid clustering. The cap is applied last and doesn't consider `--max-gap`, so dropping breaks can leave gaps longer than the max gap. Breaks are picked by score, not spread evenly. If a short video ends up with too few chapters, raise or remove this flag.
 
 ### Output
 
